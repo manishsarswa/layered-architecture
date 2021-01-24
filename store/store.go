@@ -8,27 +8,31 @@ import (
 )
 
 type CustomerStore struct {
-	db *sql.DB
+	Db *sql.DB
 }
 
-
+//func (c CustomerStore) fakeDb() (sqlmock.Sqlmock,error,*sql.Db){
+//	fDb,mock,err:=sqlmock.New()
+//	c.Db=fDb
+//	return mock,err,fDb
+//}
 func (c CustomerStore)CloseDb(){
-	c.db.Close()
+	c.Db.Close()
 }
 func New() CustomerStore {
-	var db, err = sql.Open("mysql", "root:Manish@123Sharma@/Customer_services")
+	var Db, err = sql.Open("mysql", "root:Manish@123Sharma@/Customer_services")
 	if err != nil {
 		panic(err)
 	}
-	err = db.Ping()
+	err = Db.Ping()
 	if err != nil {
 		panic(err.Error()) // proper error handling instead of panic in your app
 	}
-	return CustomerStore {db: db}
+	return CustomerStore {Db: Db}
 }
 
 func (c CustomerStore) GetCustomerBYId(id int) (entities.Customer, error) {
-	rows, err := c.db.Query("select * from customer inner join address on customer.id=address.cid and customer.id=? ", id)
+	rows, err := c.Db.Query("select * from customer inner join address on customer.id=address.cid and customer.id=? ", id)
 	if err != nil {
 		return entities.Customer{}, err
 	}
@@ -43,7 +47,7 @@ func (c CustomerStore) GetCustomerBYId(id int) (entities.Customer, error) {
 }
 
 func (c CustomerStore) GetCustomerByName(name string) (entities.Customer, error) {
-	rows, err := c.db.Query("select * from customer inner join address on customer.id=address.cid where customer.name=? ", name)
+	rows, err := c.Db.Query("select * from customer inner join address on customer.id=address.cid where customer.name=? ", name)
 	if err != nil {
 		return entities.Customer{}, err
 	}
@@ -67,7 +71,7 @@ func (c CustomerStore) CreateCustomer(cust entities.Customer) (entities.Customer
 	info=append(info,&cust.Name)
 	info=append(info,&cust.Dob)
 
-	row,_:=c.db.Exec(query,info...)
+	row,_:=c.Db.Exec(query,info...)
 	query=`insert into address (street_name,city,state,cid) values(?,?,?,?)`
 	var addr[] interface{}
 	if cust.Add.StreetName=="" || cust.Add.City=="" || cust.Add.State==""{
@@ -82,14 +86,14 @@ func (c CustomerStore) CreateCustomer(cust entities.Customer) (entities.Customer
 		return entities.Customer{},nil
 	}
 	addr=append(addr,id)
-	_,ok:=c.db.Exec(query,addr...)
+	_,ok:=c.Db.Exec(query,addr...)
 	if ok!=nil{
-		panic(ok)
+		fmt.Println(ok)
 	}
 	query=`select * from customer inner join address on customer.id=address.cid where customer.id=?`
 
 
-	newRow,_:=c.db.Query(query,id)
+	newRow,_:=c.Db.Query(query,id)
 	var detail entities.Customer
 	for newRow.Next() {
 		newRow.Scan(&detail.Id, &detail.Name, &detail.Dob, &detail.Add.Id, &detail.Add.StreetName, &detail.Add.City, &detail.Add.State, &detail.Add.CustomerId)
@@ -99,7 +103,7 @@ func (c CustomerStore) CreateCustomer(cust entities.Customer) (entities.Customer
 
 func (c CustomerStore) GetCustomer() ([]entities.Customer,error){
 	query:=`select * from customer inner join address on customer.id=address.cid`
-	rows,ok:=c.db.Query(query)
+	rows,ok:=c.Db.Query(query)
 	if ok!=nil {
 		panic(ok)
 	}
@@ -121,7 +125,7 @@ func (c CustomerStore) RemoveCustomer(id int) error{
 	info=append(info,id)
 
 	query := `delete from customer where id=?`
-	_, ok:= c.db.Exec(query, info...)
+	_, ok:= c.Db.Exec(query, info...)
 	if ok!=nil{
 		return ok
 	}
@@ -136,7 +140,7 @@ func (c CustomerStore) UpdateCustomer (customer entities.Customer,id int) (entit
 		info=append(info,customer.Name)
 		query+=" where customer.id=?"
 		info=append(info,id)
-		_,er:=c.db.Exec(query,info...)
+		_,er:=c.Db.Exec(query,info...)
 
 		if er!=nil{
 			return entities.Customer{},er
@@ -164,7 +168,7 @@ func (c CustomerStore) UpdateCustomer (customer entities.Customer,id int) (entit
 		query=query[:len(query)-1]
 		query += " where address.cid=?"
 		idd = append(idd, id)
-		_, ok1 := c.db.Exec(query, idd...)
+		_, ok1 := c.Db.Exec(query, idd...)
 
 		if ok1 != nil {
 			return entities.Customer{},ok1
@@ -172,7 +176,7 @@ func (c CustomerStore) UpdateCustomer (customer entities.Customer,id int) (entit
 	}
 
 	query:=`select * from customer inner join address on customer.id=address.cid where customer.id=?`
-	rows,_:=c.db.Query(query,id)
+	rows,_:=c.Db.Query(query,id)
 	var detail entities.Customer
 	for rows.Next(){
 		rows.Scan(&detail.Id,&detail.Name,&detail.Dob,&detail.Add.Id,&detail.Add.StreetName,&detail.Add.City,&detail.Add.State,&detail.Add.CustomerId)
