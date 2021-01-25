@@ -1,10 +1,8 @@
 package services
 
 import (
-	"encoding/json"
-	"layres/entities"
-	"layres/store"
-	"net/http"
+	"layres_new/entities"
+	"layres_new/store"
 )
 
 type CustomerService struct {
@@ -15,81 +13,41 @@ func New(customer store.Customer) CustomerService {
 	return CustomerService{store: customer}
 }
 
-func (c CustomerService) GetCustomerById(w http.ResponseWriter, id int) {
-	if id <= 0 {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	resp, err := c.store.GetCustomerBYId(id)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode([]entities.Customer(nil))
-	} else {
-		if resp.Id == 0 {
-			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode([]entities.Customer(nil))
-		} else {
-			json.NewEncoder(w).Encode(resp)
-		}
-	}
+func (c CustomerService) GetByID(id int) (entities.Customer,error){
+	resp, err := c.store.GetByID(id)
+	return resp,err
 }
 
-func (c CustomerService) GetCustomerByName(w http.ResponseWriter,Name string){
-	resp,err:=c.store.GetCustomerByName(Name)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode([]entities.Customer(nil))
-	} else {
-			json.NewEncoder(w).Encode(resp)
-	}
+func (c CustomerService) GetByName(Name string) ([]entities.Customer,error){
+	resp,err:=c.store.GetByName(Name)
+	return resp,err
 
 }
 
-func (c CustomerService) CreateCustomer(w http.ResponseWriter,customer entities.Customer) {
+func (c CustomerService) Create(customer entities.Customer) (entities.Customer,error) {
 
 	age := dateInSeconds(customer.Dob)
+
 	if age/(365*24*3600) < 18 {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		return entities.Customer{},nil
 	}
-	resp, err := c.store.CreateCustomer(customer)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode([]entities.Customer(nil))
-	}
-	if resp.Id==0{
-		w.WriteHeader(http.StatusBadRequest)
-		return
-}else {
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(resp)
-	}
-
+	return c.store.Create(customer)
 
 }
 
-func (c CustomerService) GetCustomer(w http.ResponseWriter){
-	resp,err:=c.store.GetCustomer()
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode([]entities.Customer(nil))
-	} else {
-		json.NewEncoder(w).Encode(resp)
-	}
+func (c CustomerService) GetAll()([]entities.Customer,error){
+
+	return c.store.GetAll()
 }
 
 
-func (c CustomerService) RemoveCustomer(w http.ResponseWriter, id int){
-	err:=c.store.RemoveCustomer(id)
-	if err!=nil{
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
+func (c CustomerService) Remove(id int) error{
+
+	return c.store.Remove(id)
 }
 
-func (c CustomerService) UpdateCustomer(customer entities.Customer,id int) (entities.Customer,error){
-	cnt,err:=c.store.UpdateCustomer(customer,id)
+func (c CustomerService) Update(customer entities.Customer,id int) (entities.Customer,error){
+	cnt,err:=c.store.Update(customer,id)
 	if err!=nil{
 		return entities.Customer{},err
 	}

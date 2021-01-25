@@ -1,16 +1,14 @@
 package services
 
 import (
-	"layres/entities"
-	"net/http"
+	"layres_new/entities"
 )
 type Customer interface {
-	GetCustomerBYId(id int)
-	GetCustomerByName(name string)
-	CreateCustomer(customer entities.Customer)
-	GetCustomer(w http.ResponseWriter)
-	RemoveCustomer(w http.ResponseWriter,id int)
-	UpdateCustomer(customer entities.Customer,id int) entities.Customer
-	CloseDb()
-
+	GetByID(id int)  (entities.Customer,error)
+	GetByName(name string)  ([]entities.Customer,error)
+	Create(customer entities.Customer)  entities.Customer
+	GetAll() ([]entities.Customer,error)
+	Remove(id int)  error
+	Update(customer entities.Customer,id int)  entities.Customer
+	CloseDB()
 }
