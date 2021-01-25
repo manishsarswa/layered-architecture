@@ -1,13 +1,13 @@
 package store
 
-import "layres/entities"
+import "layres_new/entities"
 
 type Customer interface {
-	GetCustomerBYId(id int) (entities.Customer, error)
-	GetCustomerByName(name string) (entities.Customer,error)
-	CreateCustomer(customer entities.Customer) (entities.Customer,error)
-	CloseDb()
-	GetCustomer() ([]entities.Customer,error)
-	RemoveCustomer(id int) error
-	UpdateCustomer(customer entities.Customer,id int) (entities.Customer,error)
+	GetByID(id int) (entities.Customer, error)
+	GetByName(name string) ([]entities.Customer,error)
+	Create(customer entities.Customer) (entities.Customer,error)
+	CloseDB()
+	GetAll() ([]entities.Customer,error)
+	Remove(id int) error
+	Update(customer entities.Customer,id int) (entities.Customer,error)
 }

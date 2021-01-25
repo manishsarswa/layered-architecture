@@ -1,190 +1,168 @@
 package store
 
-import "C"
 import (
 	"database/sql"
 	"fmt"
-	"layres/entities"
+	"layres_new/entities"
 )
 
 type CustomerStore struct {
-	Db *sql.DB
+	DB *sql.DB
 }
 
-//func (c CustomerStore) fakeDb() (sqlmock.Sqlmock,error,*sql.Db){
-//	fDb,mock,err:=sqlmock.New()
-//	c.Db=fDb
-//	return mock,err,fDb
-//}
-func (c CustomerStore)CloseDb(){
-	c.Db.Close()
+
+func (c CustomerStore) CloseDB(){
+	c.DB.Close()
 }
-func New() CustomerStore {
-	var Db, err = sql.Open("mysql", "root:Manish@123Sharma@/Customer_services")
-	if err != nil {
-		panic(err)
-	}
-	err = Db.Ping()
-	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
-	}
-	return CustomerStore {Db: Db}
+func New(db *sql.DB) Customer {
+	return CustomerStore {DB: db}
 }
 
-func (c CustomerStore) GetCustomerBYId(id int) (entities.Customer, error) {
-	rows, err := c.Db.Query("select * from customer inner join address on customer.id=address.cid and customer.id=? ", id)
+func (c CustomerStore) GetByID(id int) (entities.Customer, error) {
+	row, err := c.DB.Query("select * from customer inner join address on customer.id=address.cid and customer.id=? ", id)
 	if err != nil {
 		return entities.Customer{}, err
 	}
 
-	var cust entities.Customer
+	var customer entities.Customer
 
-	for rows.Next() {
-		rows.Scan(&cust.Id, &cust.Name, &cust.Dob, &cust.Address.Id, &cust.Address.StreetName, &cust.Address.City, &cust.Address.State, &cust.Address.CustomerId)
+	for row.Next() {
+		row.Scan(&customer.Id, &customer.Name, &customer.Dob, &customer.Address.Id, &customer.Address.StreetName, &customer.Address.City, &customer.Address.State, &customer.Address.CustomerId)
 	}
 
-	return cust, nil
+	return customer, nil
 }
 
-func (c CustomerStore) GetCustomerByName(name string) (entities.Customer, error) {
-	rows, err := c.Db.Query("select * from customer inner join address on customer.id=address.cid where customer.name=? ", name)
+func (c CustomerStore) GetByName(name string) ([]entities.Customer, error) {
+	rows, err := c.DB.Query("select * from customer inner join address on customer.id=address.cid where customer.name=? ", name)
 	if err != nil {
-		return entities.Customer{}, err
+		return []entities.Customer(nil), err
 	}
-	fmt.Println(name)
-	var cust entities.Customer
+
+	var customers []entities.Customer
 
 	for rows.Next() {
-		rows.Scan(&cust.Id, &cust.Name, &cust.Dob, &cust.Address.Id, &cust.Address.StreetName, &cust.Address.City, &cust.Address.State, &cust.Address.CustomerId)
+		var customer entities.Customer
+		rows.Scan(&customer.Id, &customer.Name, &customer.Dob, &customer.Address.Id, &customer.Address.StreetName, &customer.Address.City, &customer.Address.State, &customer.Address.CustomerId)
+		customers=append(customers,customer)
 	}
-	fmt.Println(cust)
-	return cust, nil
+	return customers, nil
 }
 
-func (c CustomerStore) CreateCustomer(cust entities.Customer) (entities.Customer,error){
-	var info[] interface{}
+func (c CustomerStore) Create(customer entities.Customer) (entities.Customer,error){
+	if customer.Name=="" || customer.Dob==""{
+		return entities.Customer{},nil
+	}
+
+	if customer.Address.StreetName=="" || customer.Address.City=="" || customer.Address.State==""{
+		return entities.Customer{},nil
+	}
+
 	query:=`insert into customer (name,dob) values(?,?)`
-	if cust.Name=="" || cust.Dob==""{
-		return entities.Customer{},nil
-	}
-	if cust.Address.StreetName=="" || cust.Address.City=="" || cust.Address.State==""{
-		return entities.Customer{},nil
-	}
-	info=append(info,&cust.Name)
-	info=append(info,&cust.Dob)
 
-	row,_:=c.Db.Exec(query,info...)
+	result,_:=c.DB.Exec(query,customer.Name,customer.Dob)
 	query=`insert into address (street_name,city,state,cid) values(?,?,?,?)`
-	var addr[] interface{}
 
-	addr=append(addr,&cust.Address.StreetName)
-	addr=append(addr,&cust.Address.City)
-	addr=append(addr,&cust.Address.State)
-
-	id,ok1:=row.LastInsertId()
-	if ok1!=nil{
-		fmt.Println(ok1)
+	id,err:=result.LastInsertId()
+	if err!=nil{
+		fmt.Println(err)
 	}
-	addr=append(addr,id)
-	_,ok:=c.Db.Exec(query,addr...)
-	if ok!=nil{
-		fmt.Println(ok)
+	_,err=c.DB.Exec(query,customer.Address.StreetName,customer.Address.City,customer.Address.State,id)
+	if err!=nil{
+		fmt.Println(err)
 	}
 	query=`select * from customer inner join address on customer.id=address.cid where customer.id=?`
 
-
-	newRow,_:=c.Db.Query(query,id)
-	var detail entities.Customer
-	for newRow.Next() {
-		newRow.Scan(&detail.Id, &detail.Name, &detail.Dob, &detail.Address.Id, &detail.Address.StreetName, &detail.Address.City, &detail.Address.State, &detail.Address.CustomerId)
+	row,_:=c.DB.Query(query,id)
+	var customer1 entities.Customer
+	for row.Next() {
+		row.Scan(&customer1.Id, &customer1.Name, &customer1.Dob, &customer1.Address.Id, &customer1.Address.StreetName, &customer1.Address.City, &customer1.Address.State, &customer1.Address.CustomerId)
 	}
 
-	return detail,nil
+	return customer1,nil
 }
 
-func (c CustomerStore) GetCustomer() ([]entities.Customer,error){
+func (c CustomerStore) GetAll() ([]entities.Customer,error){
 	query:=`select * from customer inner join address on customer.id=address.cid`
-	rows,ok:=c.Db.Query(query)
-	if ok!=nil {
-		panic(ok)
+
+	rows,err:=c.DB.Query(query)
+	if err!=nil {
+		panic(err)
 	}
 
-	var response []entities.Customer
-
+	var customers []entities.Customer
 	defer rows.Close()
 
 	for rows.Next() {
-		var detail entities.Customer
-		ok = rows.Scan(&detail.Id,&detail.Name,&detail.Dob,&detail.Address.Id,&detail.Address.StreetName,&detail.Address.City,&detail.Address.State,&detail.Address.CustomerId)
-		response = append(response, detail)
+		var customer entities.Customer
+		rows.Scan(&customer.Id,&customer.Name,&customer.Dob,&customer.Address.Id,&customer.Address.StreetName,&customer.Address.City,&customer.Address.State,&customer.Address.CustomerId)
+		customers = append(customers, customer)
 	}
-	return response,nil
+	return customers,nil
 }
 
-func (c CustomerStore) RemoveCustomer(id int) error{
-	var info[] interface{}
-	info=append(info,id)
+func (c CustomerStore) Remove(id int) error{
 
 	query := `delete from customer where id=?`
-	_, ok:= c.Db.Exec(query, info...)
-	if ok!=nil{
-		return ok
+	_, err:= c.DB.Exec(query, id)
+	if err!=nil{
+		return err
 	}
 	return nil
 }
 
-func (c CustomerStore) UpdateCustomer (customer entities.Customer,id int) (entities.Customer,error){
-	if customer.Name!=""{
+func (c CustomerStore) Update(customer entities.Customer,id int) (entities.Customer,error){
+	var info []interface{}
+	if customer.Name!="" {
 		query:=`update customer set`
-		var info [] interface{}
 		query+=" name=?"
 		info=append(info,customer.Name)
 		query+=" where customer.id=?"
 		info=append(info,id)
-		_,er:=c.Db.Exec(query,info...)
+		_,er:=c.DB.Exec(query,info...)
 
 		if er!=nil{
 			return entities.Customer{},er
 		}
 	}
-
+	var info1 []interface{}
 	check:=entities.Address{}
 	if  customer.Address!=check {
 		query := `update address set `
-		var idd []interface{}
+
 		if customer.Address.StreetName != "" {
-			idd = append(idd, customer.Address.StreetName)
+			info1 = append(info1, customer.Address.StreetName)
 			query += " street_name=?,"
 		}
 
 		if customer.Address.City != "" {
-			idd = append(idd, customer.Address.City)
+			info1 = append(info1, customer.Address.City)
 			query += " city=?,"
 		}
 
 		if customer.Address.State != "" {
-			idd = append(idd, customer.Address.State)
+			info1 = append(info1, customer.Address.State)
 			query += " state=?,"
 		}
 		query=query[:len(query)-1]
 		query += " where address.cid=?"
-		idd = append(idd, id)
-		_, ok1 := c.Db.Exec(query, idd...)
+		info1 = append(info1, id)
+		_, err := c.DB.Exec(query, info1...)
 
-		if ok1 != nil {
-			return entities.Customer{},ok1
+		if err != nil {
+			return entities.Customer{},err
 		}
 	}
 
 	query:=`select * from customer inner join address on customer.id=address.cid where customer.id=?`
-	rows,_:=c.Db.Query(query,id)
-	var detail entities.Customer
-	for rows.Next(){
-		rows.Scan(&detail.Id,&detail.Name,&detail.Dob,&detail.Address.Id,&detail.Address.StreetName,&detail.Address.City,&detail.Address.State,&detail.Address.CustomerId)
+	row,_:=c.DB.Query(query,id)
+	var customer1 entities.Customer
+	for row.Next(){
+		row.Scan(&customer1.Id,&customer1.Name,&customer1.Dob,&customer1.Address.Id,&customer1.Address.StreetName,&customer1.Address.City,&customer1.Address.State,&customer1.Address.CustomerId)
 	}
-	if detail.Id==0{
+	if customer1.Id==0{
 		return entities.Customer{},nil
 	}
-	return detail,nil
+	return customer1,nil
 }
 
