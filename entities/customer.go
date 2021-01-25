@@ -13,5 +13,5 @@ type Customer struct {
 	Id   int    `json:id`
 	Name string `json:name`
 	Dob  string `json:dob`
-	Add  Address
+	Address  Address
 }

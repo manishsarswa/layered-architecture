@@ -23,5 +23,5 @@ func main() {
 	r.HandleFunc("/customer",handler.CreateCustomer).Methods(http.MethodPost)
 	r.HandleFunc("/customer/{id:[0-9]+}",handler.RemoveCustomer).Methods(http.MethodDelete)
 	r.HandleFunc("/customer/{id:[0-9]+}",handler.UpdateCustomer).Methods(http.MethodPut)
-	log.Fatal(http.ListenAndServe(":3003", r))
+	log.Fatal(http.ListenAndServe(":3004", r))
 }

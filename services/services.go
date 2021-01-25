@@ -45,18 +45,22 @@ func (c CustomerService) GetCustomerByName(w http.ResponseWriter,Name string){
 
 }
 
-func (c CustomerService) CreateCustomer(w http.ResponseWriter,customer entities.Customer){
+func (c CustomerService) CreateCustomer(w http.ResponseWriter,customer entities.Customer) {
 
-	age:=dateInSeconds(customer.Dob)
-	if age/(365*24*3600)<18{
+	age := dateInSeconds(customer.Dob)
+	if age/(365*24*3600) < 18 {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	resp,err:=c.store.CreateCustomer(customer)
+	resp, err := c.store.CreateCustomer(customer)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode([]entities.Customer(nil))
-	} else {
+	}
+	if resp.Id==0{
+		w.WriteHeader(http.StatusBadRequest)
+		return
+}else {
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(resp)
 	}
@@ -89,5 +93,6 @@ func (c CustomerService) UpdateCustomer(customer entities.Customer,id int) (enti
 	if err!=nil{
 		return entities.Customer{},err
 	}
+
 	return cnt,nil
 }

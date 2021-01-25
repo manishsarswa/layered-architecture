@@ -40,7 +40,7 @@ func (c CustomerStore) GetCustomerBYId(id int) (entities.Customer, error) {
 	var cust entities.Customer
 
 	for rows.Next() {
-		rows.Scan(&cust.Id, &cust.Name, &cust.Dob, &cust.Add.Id, &cust.Add.StreetName, &cust.Add.City, &cust.Add.State, &cust.Add.CustomerId)
+		rows.Scan(&cust.Id, &cust.Name, &cust.Dob, &cust.Address.Id, &cust.Address.StreetName, &cust.Address.City, &cust.Address.State, &cust.Address.CustomerId)
 	}
 
 	return cust, nil
@@ -55,7 +55,7 @@ func (c CustomerStore) GetCustomerByName(name string) (entities.Customer, error)
 	var cust entities.Customer
 
 	for rows.Next() {
-		rows.Scan(&cust.Id, &cust.Name, &cust.Dob, &cust.Add.Id, &cust.Add.StreetName, &cust.Add.City, &cust.Add.State, &cust.Add.CustomerId)
+		rows.Scan(&cust.Id, &cust.Name, &cust.Dob, &cust.Address.Id, &cust.Address.StreetName, &cust.Address.City, &cust.Address.State, &cust.Address.CustomerId)
 	}
 	fmt.Println(cust)
 	return cust, nil
@@ -67,23 +67,23 @@ func (c CustomerStore) CreateCustomer(cust entities.Customer) (entities.Customer
 	if cust.Name=="" || cust.Dob==""{
 		return entities.Customer{},nil
 	}
-
+	if cust.Address.StreetName=="" || cust.Address.City=="" || cust.Address.State==""{
+		return entities.Customer{},nil
+	}
 	info=append(info,&cust.Name)
 	info=append(info,&cust.Dob)
 
 	row,_:=c.Db.Exec(query,info...)
 	query=`insert into address (street_name,city,state,cid) values(?,?,?,?)`
 	var addr[] interface{}
-	if cust.Add.StreetName=="" || cust.Add.City=="" || cust.Add.State==""{
-		return entities.Customer{},nil
-	}
-	addr=append(addr,&cust.Add.StreetName)
-	addr=append(addr,&cust.Add.City)
-	addr=append(addr,&cust.Add.State)
+
+	addr=append(addr,&cust.Address.StreetName)
+	addr=append(addr,&cust.Address.City)
+	addr=append(addr,&cust.Address.State)
 
 	id,ok1:=row.LastInsertId()
 	if ok1!=nil{
-		return entities.Customer{},nil
+		fmt.Println(ok1)
 	}
 	addr=append(addr,id)
 	_,ok:=c.Db.Exec(query,addr...)
@@ -96,8 +96,9 @@ func (c CustomerStore) CreateCustomer(cust entities.Customer) (entities.Customer
 	newRow,_:=c.Db.Query(query,id)
 	var detail entities.Customer
 	for newRow.Next() {
-		newRow.Scan(&detail.Id, &detail.Name, &detail.Dob, &detail.Add.Id, &detail.Add.StreetName, &detail.Add.City, &detail.Add.State, &detail.Add.CustomerId)
+		newRow.Scan(&detail.Id, &detail.Name, &detail.Dob, &detail.Address.Id, &detail.Address.StreetName, &detail.Address.City, &detail.Address.State, &detail.Address.CustomerId)
 	}
+
 	return detail,nil
 }
 
@@ -114,7 +115,7 @@ func (c CustomerStore) GetCustomer() ([]entities.Customer,error){
 
 	for rows.Next() {
 		var detail entities.Customer
-		ok = rows.Scan(&detail.Id,&detail.Name,&detail.Dob,&detail.Add.Id,&detail.Add.StreetName,&detail.Add.City,&detail.Add.State,&detail.Add.CustomerId)
+		ok = rows.Scan(&detail.Id,&detail.Name,&detail.Dob,&detail.Address.Id,&detail.Address.StreetName,&detail.Address.City,&detail.Address.State,&detail.Address.CustomerId)
 		response = append(response, detail)
 	}
 	return response,nil
@@ -148,21 +149,21 @@ func (c CustomerStore) UpdateCustomer (customer entities.Customer,id int) (entit
 	}
 
 	check:=entities.Address{}
-	if  customer.Add!=check {
+	if  customer.Address!=check {
 		query := `update address set `
 		var idd []interface{}
-		if customer.Add.StreetName != "" {
-			idd = append(idd, customer.Add.StreetName)
+		if customer.Address.StreetName != "" {
+			idd = append(idd, customer.Address.StreetName)
 			query += " street_name=?,"
 		}
 
-		if customer.Add.City != "" {
-			idd = append(idd, customer.Add.City)
+		if customer.Address.City != "" {
+			idd = append(idd, customer.Address.City)
 			query += " city=?,"
 		}
 
-		if customer.Add.State != "" {
-			idd = append(idd, customer.Add.State)
+		if customer.Address.State != "" {
+			idd = append(idd, customer.Address.State)
 			query += " state=?,"
 		}
 		query=query[:len(query)-1]
@@ -179,7 +180,7 @@ func (c CustomerStore) UpdateCustomer (customer entities.Customer,id int) (entit
 	rows,_:=c.Db.Query(query,id)
 	var detail entities.Customer
 	for rows.Next(){
-		rows.Scan(&detail.Id,&detail.Name,&detail.Dob,&detail.Add.Id,&detail.Add.StreetName,&detail.Add.City,&detail.Add.State,&detail.Add.CustomerId)
+		rows.Scan(&detail.Id,&detail.Name,&detail.Dob,&detail.Address.Id,&detail.Address.StreetName,&detail.Address.City,&detail.Address.State,&detail.Address.CustomerId)
 	}
 	if detail.Id==0{
 		return entities.Customer{},nil

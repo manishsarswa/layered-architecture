@@ -26,7 +26,7 @@ func TestGetByName(t *testing.T) {
 		input string
 		output entities.Customer
 	}{
-		{input: "?name=manish", output: entities.Customer{Id: 31, Name: "manish", Dob: "12/12/2000", Add: entities.Address{Id: 19, StreetName: "bikaner", City: "s", State: "ss", CustomerId: 31}},},
+		{input: "?name=manish", output: entities.Customer{Id: 31, Name: "manish", Dob: "12/12/2000", Address: entities.Address{Id: 19, StreetName: "bikaner", City: "s", State: "ss", CustomerId: 31}},},
 		{"?name=pankaj",entities.Customer{}},
 	}
 	datastore := store.New()
@@ -54,7 +54,7 @@ func TestGetByName(t *testing.T) {
 
 func TestGetCustomerById(t *testing.T){
 	testcases:=[]Define{
-		{Input: "31", Output: entities.Customer{Id: 31, Name: "manish", Dob: "12/12/2000", Add: entities.Address{Id: 19, StreetName: "bikaner", City: "s", State: "ss", CustomerId: 31}}},
+		{Input: "31", Output: entities.Customer{Id: 31, Name: "manish", Dob: "12/12/2000", Address: entities.Address{Id: 19, StreetName: "bikaner", City: "s", State: "ss", CustomerId: 31}}},
 		{"1234",entities.Customer{}},
 	}
 	datastore := store.New()
@@ -117,8 +117,8 @@ func TestCreateCustomer(t *testing.T){
 		input []byte
 		output entities.Customer
 	}{
-		{input: []byte(`{"Name":"sharma","Dob":"13/12/2000","StreetName":"5th cross","City":"bangalore","State":"Karnataka"}`), output: entities.Customer{Id: 34, Name: "sharma", Dob: "13/12/2000", Add: entities.Address{Id: 22, StreetName: "5th cross", City: "bangalore", State: "karnataka", CustomerId: 34}}},
-		{input: []byte(`{"Name":"Ankit","Dob":"14/10/2000","StreetName":"5th cross","City":"bangalore","State":"Karnataka"}`), output: entities.Customer{Id: 35, Name: "Ankit", Dob: "14/10/2000", Add: entities.Address{Id: 23, StreetName: "5th cross", City: "bangalore", State: "karnataka", CustomerId: 35}}},
+		{input: []byte(`{"Name":"sharma","Dob":"13/12/2000","StreetName":"5th cross","City":"bangalore","State":"Karnataka"}`), output: entities.Customer{Id: 34, Name: "sharma", Dob: "13/12/2000", Address: entities.Address{Id: 22, StreetName: "5th cross", City: "bangalore", State: "karnataka", CustomerId: 34}}},
+		{input: []byte(`{"Name":"Ankit","Dob":"14/10/2000","StreetName":"5th cross","City":"bangalore","State":"Karnataka"}`), output: entities.Customer{Id: 35, Name: "Ankit", Dob: "14/10/2000", Address: entities.Address{Id: 23, StreetName: "5th cross", City: "bangalore", State: "karnataka", CustomerId: 35}}},
 
 	}
 
@@ -169,9 +169,9 @@ func TestUpdateCustomer(t *testing.T) {
 
 func TestRemoveCustomer(t *testing.T){
 	testcases:=[]Define{
-		{Input: "31", Output: entities.Customer{Id: 31, Name: "manish", Dob: "12/12/2000", Add: entities.Address{Id: 19, StreetName: "bikaner", City: "s", State: "ss", CustomerId: 31}}},
-		{"0",entities.Customer(nil)},
-		{"1234",entities.Customer(nil)},
+		{Input: "31", Output: entities.Customer{Id: 31, Name: "manish", Dob: "12/12/2000", Address: entities.Address{Id: 19, StreetName: "bikaner", City: "s", State: "ss", CustomerId: 31}}},
+		{"0",entities.Customer{}},
+		{"1234",entities.Customer{}},
 	}
 
 	datastore := store.New()
