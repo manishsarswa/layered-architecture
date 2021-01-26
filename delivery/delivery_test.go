@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	_ "github.com/go-sql-driver/mysql"
@@ -83,5 +84,46 @@ func TestHandler_GetByName(t *testing.T) {
 		}
 
 	}
+
+}
+
+
+
+func TestHandler_Create(t *testing.T) {
+
+	var db, err = sql.Open("mysql", "root:Manish@123Sharma@/Customer_services")
+	if err != nil {
+		panic(err)
+	}
+	err = db.Ping()
+	if err != nil {
+		panic(err)// proper error handling instead of panic in your app
+	}
+
+
+	testcases:=[]struct{
+		input []byte
+		output entities.Customer
+	}{
+		{input: []byte(`{"name": "sdfgh", "dob": "12/12/1985", "address":{"streetName": "wsedrft", "city": "sdfr", "state": "qwedrf"}}`), output: entities.Customer{Id:56, Name: "sdfgh", Dob: "12/12/1985", Address: entities.Address{Id:39, StreetName: "wsedrft", City: "sdfr", State: "qwedrf",CustomerId: 56}}},
+		{input: []byte(`{"name": "sdfgh", "dob": "12/12/2010", "address":{"streetName": "wsedrft", "city": "sdfr", "state": "qwedrf"}}`), output: entities.Customer{}},
+	}
+
+
+	DB:=New(services.New(store.New(db)))
+	for i:=range testcases{
+		w:=httptest.NewRecorder()
+		req:=httptest.NewRequest(http.MethodGet,"/customer",bytes.NewBuffer(testcases[i].input))
+		DB.Create(w,req)
+		var customers entities.Customer
+		err:=json.Unmarshal(w.Body.Bytes(),&customers)
+		if customers.Id!=0 {
+			if err != nil || !reflect.DeepEqual(customers, testcases[i].output) {
+				t.Error("failed")
+			}
+		}
+
+	}
+
 
 }

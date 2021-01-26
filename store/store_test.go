@@ -103,35 +103,35 @@ func TestCustomerStore_GetByName(t *testing.T) {
 
 
 
-//
-//func TestCustomerStore_Remove(t *testing.T) {
-//
-//	var db, err = sql.Open("mysql", "root:Manish@123Sharma@/Customer_services")
-//	if err != nil {
-//		panic(err)
-//	}
-//	err = db.Ping()
-//	if err != nil {
-//		panic(err)// proper error handling instead of panic in your app
-//	}
-//	testcases:=[]struct{
-//		input int
-//		output entities.Customer
-//	}{
-//		{input: 31, output: entities.Customer{}},
-//		{1234,entities.Customer{}},
-//	}
-//
-//		DB:=New(db)
-//		for i:=range testcases{
-//			err:= DB.Remove(testcases[i].input)
-//
-//			if err!=nil {
-//				t.Errorf("Failed")
-//			}
-//		}
-//
-//}
+
+func TestCustomerStore_Remove(t *testing.T) {
+
+	var db, err = sql.Open("mysql", "root:Manish@123Sharma@/Customer_services")
+	if err != nil {
+		panic(err)
+	}
+	err = db.Ping()
+	if err != nil {
+		panic(err)// proper error handling instead of panic in your app
+	}
+	testcases:=[]struct{
+		input int
+		output entities.Customer
+	}{
+		{input: 31, output: entities.Customer{}},
+		{1234,entities.Customer{}},
+	}
+
+		DB:=New(db)
+		for i:=range testcases{
+			err:= DB.Remove(testcases[i].input)
+
+			if err!=nil {
+				t.Errorf("Failed")
+			}
+		}
+
+}
 
 //
 //func TestCustomerStore_Create(t *testing.T) {
@@ -147,8 +147,4 @@ func TestCustomerStore_GetByName(t *testing.T) {
 //
 //		{input: entities.Customer{Name: "sharma", Dob: "13/12/2000", Address: entities.Address{StreetName: "sdf", City: "sdfg", State: "ertgfcx"}}, output: entities.Customer{Id: 46, Name: "sharma", Dob: "13/12/2000", Address: entities.Address{Id: 29, StreetName: "sdf", City: "sdfg", State: "ertgfcx", CustomerId: 46}}},
 //	}
-//
-//
-//
-//
 //}
