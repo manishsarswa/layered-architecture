@@ -3,8 +3,10 @@ package delivery
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"io"
 	"io/ioutil"
 	"layres_new/entities"
+	"layres_new/errors"
 	"layres_new/services"
 	"net/http"
 	"strconv"
@@ -13,6 +15,7 @@ import (
 type Handler struct{
 	service services.CustomerService
 }
+
 
 
 func New(customer services.CustomerService) Handler {
@@ -26,17 +29,19 @@ func (c Handler) GetByID(w http.ResponseWriter,r *http.Request){
 	id, _ :=strconv.Atoi(vars["id"])
 	if id<=0 {
 		w.WriteHeader(http.StatusBadRequest)
+		io.WriteString(w, string(errors.NotFound))
 		return
 	}
 
 	resp,err:=c.service.GetByID(id)
 	if err != nil{
-		w.WriteHeader(http.StatusBadRequest)
+		io.WriteString(w,err.Error())
 		return
 	}
 
 	if resp.Id==0{
 		w.WriteHeader(http.StatusNoContent)
+		io.WriteString(w, string(errors.NotFound))
 		return
 	}
 
@@ -49,6 +54,7 @@ func (c Handler) GetByName(w http.ResponseWriter,r *http.Request){
 	Name :=r.URL.Query().Get("name")
 	resp,err:=c.service.GetByName(Name)
 	if err != nil {
+		io.WriteString(w,err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -65,6 +71,7 @@ func (c Handler) Create(w http.ResponseWriter,r *http.Request){
 
 	resp,err:=c.service.Create(customer)
 	if err != nil || resp.Id==0{
+		io.WriteString(w,err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -77,6 +84,7 @@ func (c Handler) Create(w http.ResponseWriter,r *http.Request){
 func (c Handler) GetAll(w http.ResponseWriter,r *http.Request){
 	resp,err:=c.service.GetAll()
 	if err != nil {
+		io.WriteString(w,err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

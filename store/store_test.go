@@ -114,6 +114,7 @@ func TestCustomerStore_Remove(t *testing.T) {
 	if err != nil {
 		panic(err)// proper error handling instead of panic in your app
 	}
+	
 	testcases:=[]struct{
 		input int
 		output entities.Customer

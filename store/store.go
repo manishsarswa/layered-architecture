@@ -2,8 +2,8 @@ package store
 
 import (
 	"database/sql"
-	"fmt"
 	"layres_new/entities"
+	"layres_new/errors"
 )
 
 type CustomerStore struct {
@@ -21,7 +21,7 @@ func New(db *sql.DB) Customer {
 func (c CustomerStore) GetByID(id int) (entities.Customer, error) {
 	row, err := c.DB.Query("select * from customer inner join address on customer.id=address.cid and customer.id=? ", id)
 	if err != nil {
-		return entities.Customer{}, err
+		return entities.Customer{}, errors.DBError
 	}
 
 	var customer entities.Customer
@@ -36,7 +36,7 @@ func (c CustomerStore) GetByID(id int) (entities.Customer, error) {
 func (c CustomerStore) GetByName(name string) ([]entities.Customer, error) {
 	rows, err := c.DB.Query("select * from customer inner join address on customer.id=address.cid where customer.name=? ", name)
 	if err != nil {
-		return []entities.Customer(nil), err
+		return []entities.Customer(nil), errors.DBError
 	}
 
 	var customers []entities.Customer
@@ -51,11 +51,11 @@ func (c CustomerStore) GetByName(name string) ([]entities.Customer, error) {
 
 func (c CustomerStore) Create(customer entities.Customer) (entities.Customer,error){
 	if customer.Name=="" || customer.Dob==""{
-		return entities.Customer{},nil
+		return entities.Customer{},errors.BadRequest
 	}
 
 	if customer.Address.StreetName=="" || customer.Address.City=="" || customer.Address.State==""{
-		return entities.Customer{},nil
+		return entities.Customer{},errors.BadRequest
 	}
 
 	query:=`insert into customer (name,dob) values(?,?)`
@@ -65,11 +65,11 @@ func (c CustomerStore) Create(customer entities.Customer) (entities.Customer,err
 
 	id,err:=result.LastInsertId()
 	if err!=nil{
-		fmt.Println(err)
+		return entities.Customer{},errors.BadRequest
 	}
 	_,err=c.DB.Exec(query,customer.Address.StreetName,customer.Address.City,customer.Address.State,id)
 	if err!=nil{
-		fmt.Println(err)
+		return entities.Customer{},errors.BadRequest
 	}
 	query=`select * from customer inner join address on customer.id=address.cid where customer.id=?`
 
@@ -87,7 +87,7 @@ func (c CustomerStore) GetAll() ([]entities.Customer,error){
 
 	rows,err:=c.DB.Query(query)
 	if err!=nil {
-		panic(err)
+		return []entities.Customer(nil),errors.DBError
 	}
 
 	var customers []entities.Customer
@@ -106,7 +106,7 @@ func (c CustomerStore) Remove(id int) error{
 	query := `delete from customer where id=?`
 	_, err:= c.DB.Exec(query, id)
 	if err!=nil{
-		return err
+		return errors.NotFound
 	}
 	return nil
 }
@@ -122,7 +122,7 @@ func (c CustomerStore) Update(customer entities.Customer,id int) (entities.Custo
 		_,er:=c.DB.Exec(query,info...)
 
 		if er!=nil{
-			return entities.Customer{},er
+			return entities.Customer{},errors.BadRequest
 		}
 	}
 	var info1 []interface{}
@@ -149,8 +149,9 @@ func (c CustomerStore) Update(customer entities.Customer,id int) (entities.Custo
 		info1 = append(info1, id)
 		_, err := c.DB.Exec(query, info1...)
 
+
 		if err != nil {
-			return entities.Customer{},err
+			return entities.Customer{},errors.BadRequest
 		}
 	}
 
@@ -161,7 +162,7 @@ func (c CustomerStore) Update(customer entities.Customer,id int) (entities.Custo
 		row.Scan(&customer1.Id,&customer1.Name,&customer1.Dob,&customer1.Address.Id,&customer1.Address.StreetName,&customer1.Address.City,&customer1.Address.State,&customer1.Address.CustomerId)
 	}
 	if customer1.Id==0{
-		return entities.Customer{},nil
+		return entities.Customer{},errors.BadRequest
 	}
 	return customer1,nil
 }
